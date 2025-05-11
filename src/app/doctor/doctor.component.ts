@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -8,8 +8,10 @@ import { DialogModule } from 'primeng/dialog';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { Doctor } from '../models/doctor';
-import { DoctorService } from '../pages/service/doctor.service';
-
+import { Table } from 'primeng/table';
+import { DoctorSupabaseService } from '../supabase/services/doctor-supabase.service';
+import { TagModule } from 'primeng/tag'; // <-- ajouter cette ligne
+import { InputSwitchModule } from 'primeng/inputswitch';
 
 @Component({
   selector: 'app-doctor',
@@ -24,39 +26,53 @@ import { DoctorService } from '../pages/service/doctor.service';
     ButtonModule,
     DialogModule,
     IconFieldModule,
-    InputIconModule
+    TagModule,
+    InputIconModule,
+    InputSwitchModule 
   ]
 })
 export class DoctorListComponent implements OnInit {
+  @ViewChild('dt') table!: Table;
   doctors: Doctor[] = [];
-  doctorDialog: boolean = false;
-  editDialogVisible: boolean = false;
-  newDoctor: Doctor = { id: 0, name: '', age: 0, specialty: '', department: '' };
-  selectedDoctor: Doctor = { id: 0, name: '', age: 0, specialty: '', department: '' };
+  doctorDialog = false;
+  editDialogVisible = false;
+  newDoctor: Partial<Doctor> = {};
+  selectedDoctor: Doctor = {} as Doctor;
+  submitted = false;
 
-  constructor(private doctorService: DoctorService) {}
+  constructor(private doctorService: DoctorSupabaseService) {}
 
   ngOnInit(): void {
     this.loadDoctors();
   }
 
-  loadDoctors(): void {
-    this.doctors = this.doctorService.getDoctors();
+  async loadDoctors() {
+    try {
+      this.doctors = await this.doctorService.getDoctors();
+    } catch (error) {
+      console.error('Erreur de chargement des médecins:', error);
+    }
   }
+  
 
   openNewDoctorDialog(): void {
-    this.newDoctor = { id: 0, name: '', age: 0, specialty: '', department: '' };
+    this.newDoctor = {};
+    this.submitted = false;
     this.doctorDialog = true;
   }
 
-  saveDoctor(): void {
+  async saveDoctor(): Promise<void> {
+    this.submitted = true;
     if (this.newDoctor.name && this.newDoctor.age && this.newDoctor.specialty && this.newDoctor.department) {
-      this.doctorService.addDoctor({
-        ...this.newDoctor,
-        id: this.generateNewId()
-      });
-      this.loadDoctors();
-      this.doctorDialog = false;
+      try {
+        await this.doctorService.addDoctor({
+          ...this.newDoctor,
+          is_on_duty: this.newDoctor.is_on_duty ?? true        } as Doctor);
+        this.doctorDialog = false;
+        this.loadDoctors();
+      } catch (error) {
+        console.error('Erreur lors de l’ajout du médecin :', error);
+      }
     }
   }
 
@@ -65,22 +81,28 @@ export class DoctorListComponent implements OnInit {
     this.editDialogVisible = true;
   }
 
-  updateDoctor(): void {
-    this.doctorService.updateDoctor(this.selectedDoctor);
-    this.loadDoctors();
-    this.editDialogVisible = false;
+  async updateDoctor(): Promise<void> {
+    try {
+      await this.doctorService.updateDoctor(this.selectedDoctor);
+      this.editDialogVisible = false;
+      this.loadDoctors();
+    } catch (error) {
+      console.error('Erreur de mise à jour :', error);
+    }
   }
 
-  deleteDoctor(id: number): void {
-    this.doctorService.deleteDoctor(id);
-    this.loadDoctors();
+  async deleteDoctor(id: number): Promise<void> {
+    try {
+      await this.doctorService.deleteDoctor(id);
+      this.loadDoctors();
+    } catch (error) {
+      console.error('Erreur de suppression :', error);
+    }
   }
 
-  generateNewId(): number {
-    return this.doctors.length ? Math.max(...this.doctors.map(d => d.id)) + 1 : 1;
+  onGlobalFilter(table: Table, event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    table.filterGlobal(value, 'contains');
   }
-
-  onGlobalFilter(table: any, event: Event): void {
-    table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
-  }
+  
 }

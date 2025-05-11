@@ -81,16 +81,13 @@
           <p-tag
             [value]="patient.emergency_level"
             [severity]="getSeverity(patient.emergency_level)"
-            styleClass="dark:!bg-surface-900"
           />
         </td>
         <td>{{ patient.date_entree | date: 'short' }}</td>
         <td>
-          <span *ngIf="patient.etat !== 'left'">
-            {{ calculateWaitingTime(patient.date_entree) }}
-          </span>
-          <span *ngIf="patient.etat === 'left' && patient.date_sortie">
-            {{ calculateWaitingTime(patient.date_entree, patient.date_sortie) }}
+          <span *ngIf="patient.etat === 'waiting'">{{ calculateWaitingTime(patient.date_entree, now) }}</span>
+          <span *ngIf="patient.etat !== 'waiting'">
+            {{ getWaitingTime(patient) }}
           </span>
         </td>
         <td>
@@ -162,6 +159,8 @@
       </tr>
     </ng-template>
   </p-table>
+  
+  
 
   <!-- Modal ajout -->
   <p-dialog [(visible)]="patientDialog" [style]="{ width: '500px' }" header="Ajouter un patient" [modal]="true">

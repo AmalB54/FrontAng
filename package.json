@@ -22,6 +22,7 @@
         "@angular/platform-browser-dynamic": "^19.0.0",
         "@angular/router": "^19.0.0",
         "@primeng/themes": "^19.0.5",
+        "@supabase/supabase-js": "^2.49.4",
         "chart.js": "^4.4.8",
         "ng2-charts": "^4.1.1",
         "primeclt": "^0.1.5",

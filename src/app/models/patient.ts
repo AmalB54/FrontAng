@@ -14,7 +14,7 @@ export interface Patient {
   specialist_availability?: number;
   time_to_registration_min?: number;
   time_to_medical_professional_min?: number;
-
+  date_prise_en_charge?: Date;
   // Résultat de prédiction
   predicted_wait_time?: number;
 }
