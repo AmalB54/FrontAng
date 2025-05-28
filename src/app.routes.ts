@@ -14,6 +14,9 @@ export const appRoutes: Routes = [
       { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
       { path: 'documentation', component: Documentation },
       { path: 'patients', loadChildren: () => import('./app/pages/patients/patients.routes') },
+      { path: 'rooms', loadChildren: () => import('./app/pages/room/rooms/rooms.routes') },
+
+
       { 
         path: 'doctors', 
         loadComponent: () => import('./app/doctor/doctor.component').then(m => m.DoctorListComponent) 
@@ -22,6 +25,8 @@ export const appRoutes: Routes = [
         path: 'nurses',
         loadComponent: () => import('./app/nurse/nurse.component').then(m => m.NursesComponent)
       },
+      
+      
       { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') }
     ]
   },

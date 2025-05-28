@@ -1,17 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PatientService } from '../service/patient.service';
+import { FormsModule } from '@angular/forms';
 import { Patient } from '../../models/patient';
-import { ElementRef, ViewChild } from '@angular/core';
+import { PredictionService } from '../service/prediction.service';
+import { Table, TableModule } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { SelectModule } from 'primeng/select';
 import { SliderModule } from 'primeng/slider';
-import { Table, TableModule } from 'primeng/table';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { ToastModule } from 'primeng/toast';
-import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { RatingModule } from 'primeng/rating';
 import { RippleModule } from 'primeng/ripple';
@@ -21,7 +20,7 @@ import { TagModule } from 'primeng/tag';
 import { DropdownModule } from 'primeng/dropdown';
 import { DialogModule } from 'primeng/dialog';
 import { CalendarModule } from 'primeng/calendar';
-import { PredictionService } from '../service/prediction.service';
+import { PatientSupabaseService } from '../../supabase/services/patient-supabase.service';
 
 @Component({
   selector: 'app-patients',
@@ -51,20 +50,19 @@ import { PredictionService } from '../service/prediction.service';
   styleUrls: ['./patients.component.scss']
 })
 export class PatientsComponent implements OnInit {
-  patients: (Patient & { predicted_wait_time?: number })[] = [];
-  loading: boolean = true;
+  patients: Patient[] = [];
+  loading = true;
   etatOptions = [
     { label: 'En attente', value: 'waiting' },
     { label: 'Pris en charge', value: 'in-progress' },
     { label: 'Sorti', value: 'left' }
   ];
-  selectedEtat: string = '';
-
-  patientDialog: boolean = false;
-  submitted: boolean = false;
+  selectedEtat = '';
+  patientDialog = false;
+  submitted = false;
   newPatient: Partial<Patient> = {};
   selectedPatient: Patient = {} as Patient;
-  editDialogVisible: boolean = false;
+  editDialogVisible = false;
 
   emergencyLevels = [
     { label: '1 - Faible', value: '1' },
@@ -73,90 +71,117 @@ export class PatientsComponent implements OnInit {
     { label: '4 - Élevée', value: '4' },
     { label: '5 - Critique', value: '5' }
   ];
-  selectedUrgenceLevel: string = '';
+  selectedUrgenceLevel = '';
 
   @ViewChild('filter') filter!: ElementRef;
 
-  constructor(private patientService: PatientService, private predictionService: PredictionService) {}
+  constructor(
+    private patientService: PatientSupabaseService,
+    private predictionService: PredictionService
+  ) {}
+  now: Date = new Date();
+
 
   ngOnInit(): void {
     this.loadPatients();
     setInterval(() => {
-      this.patients = [...this.patients];
+      this.now = new Date(); // Met à jour l'heure actuelle chaque minute
     }, 60000);
   }
+  
 
-  loadPatients(): void {
-    this.patients = this.patientService.getPatients();
-    this.loading = false;
-    this.patients.forEach(patient => {
-      const features = [
-        parseFloat(patient.emergency_level),
-        4,
-        5,
-        10,
-        20,
-        50
-      ];
-      this.predictionService.predict(features).subscribe(res => {
-        patient.predicted_wait_time = res.prediction;
-      });
-    });
+  async loadPatients(): Promise<void> {
+    try {
+      const raw = await this.patientService.getPatients();
+      this.patients = raw
+        .map(p => ({
+          ...p,
+          emergency_level: String(p.emergency_level)
+        }))
+        .sort((a, b) => {
+          const etatOrder = { 'waiting': 0, 'in-progress': 1, 'left': 2 };
+          return etatOrder[a.etat] - etatOrder[b.etat];
+        });
+    } catch (error) {
+      console.error('Erreur chargement patients :', error);
+    } finally {
+      this.loading = false;
+    }
   }
-
+  
   openNewPatientDialog() {
     this.newPatient = {};
     this.submitted = false;
     this.patientDialog = true;
   }
 
-  savePatient() {
+  async savePatient() {
     this.submitted = true;
-  
+    const now = new Date();
+    const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+
+
+    const p = this.newPatient;
     if (
-      this.newPatient.nom &&
-      this.newPatient.date_naissance &&
-      this.newPatient.maladie &&
-      this.newPatient.emergency_level &&
-      this.newPatient.nurse_to_patient_ratio !== undefined &&
-      this.newPatient.specialist_availability !== undefined &&
-      this.newPatient.time_to_registration_min !== undefined &&
-      this.newPatient.time_to_medical_professional_min !== undefined &&
-      this.newPatient.available_beds_percent !== undefined
+      p.nom &&
+      p.date_naissance &&
+      p.maladie &&
+      p.emergency_level &&
+      p.nurse_to_patient_ratio !== undefined &&
+      p.specialist_availability !== undefined &&
+      p.time_to_registration_min !== undefined &&
+      p.time_to_medical_professional_min !== undefined &&
+      p.available_beds_percent !== undefined
     ) {
-      // Construction des features pour la prédiction
       const features = [
-        parseFloat(this.newPatient.emergency_level),
-        this.newPatient.nurse_to_patient_ratio,
-        this.newPatient.specialist_availability,
-        this.newPatient.time_to_registration_min,
-        this.newPatient.time_to_medical_professional_min,
-        this.newPatient.available_beds_percent
+        parseFloat(p.emergency_level),
+        p.nurse_to_patient_ratio,
+        p.specialist_availability,
+        p.time_to_registration_min,
+        p.time_to_medical_professional_min,
+        p.available_beds_percent
       ];
-  
-      // Appel à l’API pour la prédiction
-      this.predictionService.predict(features).subscribe((res) => {
-        const predicted = res.prediction;
-  
-        const newPatient: Patient = {
-          ...this.newPatient,
-          id: 0, // sera généré dans le service
-          date_entree: new Date(),
-          etat: 'waiting',
-          predicted_wait_time: predicted
-        } as Patient;
-  
-        this.patientService.addPatient(newPatient);
-        this.patientDialog = false;
-        this.loadPatients();
-      });
+
+      try {
+        const res = await this.predictionService.predict(features).toPromise();
+
+        if (res && res.prediction !== undefined) {
+          const predicted = res.prediction;
+
+          const patientToAdd: Omit<Patient, 'id'> = {
+            nom: p.nom,
+            maladie: p.maladie,
+            date_naissance: p.date_naissance,
+            emergency_level: p.emergency_level,
+            nurse_to_patient_ratio: p.nurse_to_patient_ratio,
+            specialist_availability: p.specialist_availability,
+            time_to_registration_min: p.time_to_registration_min,
+            time_to_medical_professional_min: p.time_to_medical_professional_min,
+            available_beds_percent: p.available_beds_percent,
+            predicted_wait_time: predicted,
+            date_entree: localDate,
+            etat: 'waiting'
+          };
+
+          await this.patientService.addPatient(patientToAdd);
+          this.patientDialog = false;
+          await this.loadPatients();
+        } else {
+          console.error('Réponse invalide de prédiction :', res);
+        }
+      } catch (err) {
+        console.error('Erreur ajout patient :', err);
+      }
     }
   }
-  
 
-  deletePatient(id: number): void {
-    this.patientService.deletePatient(id);
-    this.loadPatients();
+  async deletePatient(id: number) {
+    try {
+      await this.patientService.deletePatient(id);
+      this.loadPatients();
+    } catch (err) {
+      console.error('Erreur suppression patient :', err);
+    }
   }
 
   clear(table: Table) {
@@ -197,24 +222,45 @@ export class PatientsComponent implements OnInit {
   }
 
   calculateWaitingTime(dateEntree: Date, dateFin?: Date): string {
-    const end = dateFin ? new Date(dateFin) : new Date();
     const entree = new Date(dateEntree);
+    const end = dateFin ? new Date(dateFin) : this.now;
+  
     const diffMs = end.getTime() - entree.getTime();
+  
+    if (diffMs < 0) return '0 min'; // sécurité si entrée > now
+  
     const minutes = Math.floor(diffMs / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
+  
     if (days > 0) return `${days}j ${hours % 24}h`;
     else if (hours > 0) return `${hours}h ${minutes % 60}m`;
     else return `${minutes} min`;
   }
+  
 
-  changerEtat(patient: Patient, nouvelEtat: 'waiting' | 'in-progress' | 'left') {
+  async changerEtat(patient: Patient, nouvelEtat: 'waiting' | 'in-progress' | 'left') {
     patient.etat = nouvelEtat;
-    if (nouvelEtat === 'left') {
-      patient.date_sortie = new Date();
+  
+    const now = new Date();
+    const localNow = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  
+    if (nouvelEtat === 'in-progress') {
+      patient.date_prise_en_charge = localNow;
     }
-    this.patientService.updatePatient(patient);
+  
+    if (nouvelEtat === 'left') {
+      patient.date_sortie = localNow;
+    }
+  
+    try {
+      await this.patientService.updatePatient(patient);
+      this.loadPatients();
+    } catch (err) {
+      console.error('Erreur maj état patient :', err);
+    }
   }
+  
 
   getEtatLabel(etat: string): string {
     switch (etat) {
@@ -239,10 +285,30 @@ export class PatientsComponent implements OnInit {
     this.editDialogVisible = true;
   }
 
-  updatePatient() {
+  async updatePatient() {
     if (!this.selectedPatient.nom) return;
-    this.patientService.updatePatient(this.selectedPatient);
-    this.loadPatients();
-    this.editDialogVisible = false;
+    try {
+      await this.patientService.updatePatient(this.selectedPatient);
+      this.editDialogVisible = false;
+      this.loadPatients();
+    } catch (err) {
+      console.error('Erreur maj patient :', err);
+    }
+  }
+
+  getWaitingTime(patient: Patient): string {
+    if (patient.etat === 'waiting') {
+      return '0 min';
+    }
+
+    const start = new Date(patient.date_entree);
+    const end =
+      patient.etat === 'in-progress' && patient.date_prise_en_charge
+        ? new Date(patient.date_prise_en_charge)
+        : patient.etat === 'left' && patient.date_sortie
+        ? new Date(patient.date_sortie)
+        : new Date();
+
+    return this.calculateWaitingTime(start, end);
   }
 }

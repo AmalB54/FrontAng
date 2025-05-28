@@ -1,137 +1,149 @@
 <div class="card">
-    <div class="flex justify-between items-center mb-4">
-      <div class="font-semibold text-xl">Liste des Docteurs</div>
-      <button
-        label="Ajouter un docteur"
-        pButton
-        icon="pi pi-plus"
-        class="p-button-rounded p-button-success p-button-sm mr-2"
-        (click)="openNewDoctorDialog()"
-      ></button>
-    </div>
-  
-    <p-table
-      #dt
-      [value]="doctors"
-      dataKey="id"
-      [rows]="10"
-      [paginator]="true"
-      [rowHover]="true"
-      [showGridlines]="true"
-      [globalFilterFields]="['name', 'specialty', 'department']"
-      responsiveLayout="scroll"
-    >
-      <ng-template #caption>
-        <div class="flex justify-between items-center flex-column sm:flex-row w-full">
-          <span></span>
-          <p-iconfield iconPosition="left">
-            <p-inputicon><i class="pi pi-search"></i></p-inputicon>
-            <input
-              pInputText
-              type="text"
-              (input)="onGlobalFilter(dt, $event)"
-              placeholder="Rechercher un docteur"
-            />
-          </p-iconfield>
-        </div>
-      </ng-template>
-  
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Nom</th>
-          <th>Âge</th>
-          <th>Spécialité</th>
-          <th>Département</th>
-          <th>Actions</th>
-        </tr>
-      </ng-template>
-  
-      <ng-template pTemplate="body" let-doctor>
-        <tr>
-          <td>{{ doctor.name }}</td>
-          <td>{{ doctor.age }}</td>
-          <td>{{ doctor.specialty }}</td>
-          <td>{{ doctor.department }}</td>
-          <td>
-            <div class="flex gap-2 justify-center">
-              <button
-                pButton
-                icon="pi pi-pencil"
-                class="p-button-rounded p-button-warning p-button-sm"
-                (click)="editDoctor(doctor)"
-                title="Modifier"
-              ></button>
-              <button
-                pButton
-                icon="pi pi-trash"
-                class="p-button-rounded p-button-danger p-button-sm"
-                (click)="deleteDoctor(doctor.id)"
-                title="Supprimer"
-              ></button>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-  
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="5">Aucun docteur trouvé.</td>
-        </tr>
-      </ng-template>
-    </p-table>
-  
-    <!-- Modal ajout -->
-    <p-dialog [(visible)]="doctorDialog" [style]="{ width: '500px' }" header="Ajouter un docteur" [modal]="true">
-      <div class="flex flex-col gap-4">
-        <div>
-          <label for="name" class="font-bold mb-2 block">Nom</label>
-          <input id="name" type="text" pInputText [(ngModel)]="newDoctor.name" required autofocus />
-        </div>
-        <div>
-          <label for="age" class="font-bold mb-2 block">Âge</label>
-          <input id="age" type="number" pInputText [(ngModel)]="newDoctor.age" required />
-        </div>
-        <div>
-          <label for="specialty" class="font-bold mb-2 block">Spécialité</label>
-          <input id="specialty" type="text" pInputText [(ngModel)]="newDoctor.specialty" required />
-        </div>
-        <div>
-          <label for="department" class="font-bold mb-2 block">Département</label>
-          <input id="department" type="text" pInputText [(ngModel)]="newDoctor.department" required />
-        </div>
-      </div>
-  
-      <ng-template pTemplate="footer">
-        <p-button label="Annuler" icon="pi pi-times" text (click)="doctorDialog = false"></p-button>
-        <p-button label="Ajouter" icon="pi pi-check" (click)="saveDoctor()"></p-button>
-      </ng-template>
-    </p-dialog>
-  
-    <!-- Modal édition -->
-    <p-dialog [(visible)]="editDialogVisible" [style]="{ width: '500px' }" header="Modifier le docteur" [modal]="true">
-      <div class="flex flex-col gap-4">
-        <div>
-          <label for="edit-name" class="font-bold mb-2 block">Nom</label>
-          <input id="edit-name" type="text" pInputText [(ngModel)]="selectedDoctor.name" required autofocus />
-        </div>
-        <div>
-          <label for="edit-age" class="font-bold mb-2 block">Âge</label>
-          <input id="edit-age" type="number" pInputText [(ngModel)]="selectedDoctor.age" required />
-        </div>
-        <div>
-          <label for="edit-specialty" class="font-bold mb-2 block">Spécialité</label>
-          <input id="edit-specialty" type="text" pInputText [(ngModel)]="selectedDoctor.specialty" required />
-        </div>
-        <div>
-          <label for="edit-department" class="font-bold mb-2 block">Département</label>
-          <input id="edit-department" type="text" pInputText [(ngModel)]="selectedDoctor.department" required />
-        </div>
-      </div>
-  
-      <ng-template pTemplate="footer">
-        <p-button label="Annuler" icon="pi pi-times" text (click)="editDialogVisible = false"></p-button>
-        <p-button label="Enregistrer" icon="pi pi-check" (click)="updateDoctor()"></p-button>
-      </ng-template>
-    </p-dialog>
+  <div class="flex justify-between items-center mb-4">
+    <div class="font-semibold text-xl">Liste des Docteurs</div>
+    <button
+    label="Ajouter un docteur"
+    pButton
+    icon="pi pi-plus"
+    class="p-button-rounded p-button-warning p-button-sm mr-2"
+    title="Ajouter"
+    (click)="openNewDoctorDialog()"
+  ></button>
   </div>
-  
+
+  <!-- Barre de recherche -->
+  <div class="flex justify-end mb-3">
+    <p-iconfield iconPosition="left">
+      <p-inputicon><i class="pi pi-search"></i></p-inputicon>
+      <input
+        pInputText
+        type="text"
+        (input)="onGlobalFilter(dt, $event)"
+        placeholder="Rechercher un docteur"
+      />
+    </p-iconfield>
+  </div>
+
+  <!-- Tableau -->
+  <p-table
+    #dt
+    [value]="doctors"
+    dataKey="id"
+    [paginator]="true"
+    [rows]="10"
+    [rowHover]="true"
+    [showGridlines]="true"
+    [globalFilterFields]="['name', 'specialty', 'department']"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Nom</th>
+        <th>Âge</th>
+        <th>Spécialité</th>
+        <th>Département</th>
+        <th>Disponible</th>
+        <th>Actions</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-doctor>
+      <tr>
+        <td>{{ doctor.name }}</td>
+        <td>{{ doctor.age }}</td>
+        <td>{{ doctor.specialty }}</td>
+        <td>{{ doctor.department }}</td>
+        <td>
+          <p-tag
+            [value]="doctor.is_on_duty ? 'Oui' : 'Non'"
+            [severity]="doctor.is_on_duty ? 'success' : 'danger'"
+          ></p-tag>
+        </td>
+        <td>
+          <div class="flex gap-2 justify-center">
+            <button
+              pButton
+              icon="pi pi-pencil"
+              class="p-button-rounded p-button-warning p-button-sm"
+              (click)="editDoctor(doctor)"
+              title="Modifier"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-trash"
+              class="p-button-rounded p-button-danger p-button-sm"
+              (click)="deleteDoctor(doctor.id)"
+              title="Supprimer"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="6">Aucun docteur trouvé.</td></tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Modal ajout -->
+  <p-dialog [(visible)]="doctorDialog" [style]="{ width: '500px' }" header="Ajouter un docteur" [modal]="true">
+    <div class="flex flex-col gap-4">
+      <div>
+        <label class="font-bold block mb-2">Nom</label>
+        <input pInputText [(ngModel)]="newDoctor.name" />
+      </div>
+      <div>
+        <label class="font-bold block mb-2">Âge</label>
+        <input type="number" pInputText [(ngModel)]="newDoctor.age" />
+      </div>
+      <div>
+        <label class="font-bold block mb-2">Spécialité</label>
+        <input pInputText [(ngModel)]="newDoctor.specialty" />
+      </div>
+      <div>
+        <label class="font-bold block mb-2">Département</label>
+        <input pInputText [(ngModel)]="newDoctor.department" />
+      </div>
+      <div>
+        <label class="font-bold block mb-2">En service</label>
+        <p-inputSwitch [(ngModel)]="newDoctor.is_on_duty"></p-inputSwitch>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button label="Annuler" icon="pi pi-times" text (click)="doctorDialog = false"></p-button>
+      <p-button label="Ajouter" icon="pi pi-check" class="p-button-success" (click)="saveDoctor()"></p-button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Modal édition -->
+  <p-dialog [(visible)]="editDialogVisible" [style]="{ width: '500px' }" header="Modifier le docteur" [modal]="true">
+    <div class="flex flex-col gap-4">
+      <div>
+        <label class="font-bold block mb-2">Nom</label>
+        <input pInputText [(ngModel)]="selectedDoctor.name" />
+      </div>
+      <div>
+        <label class="font-bold block mb-2">Âge</label>
+        <input type="number" pInputText [(ngModel)]="selectedDoctor.age" />
+      </div>
+      <div>
+        <label class="font-bold block mb-2">Spécialité</label>
+        <input pInputText [(ngModel)]="selectedDoctor.specialty" />
+      </div>
+      <div>
+        <label class="font-bold block mb-2">Département</label>
+        <input pInputText [(ngModel)]="selectedDoctor.department" />
+      </div>
+      <div>
+        <label class="font-bold block mb-2">En service</label>
+        <p-inputSwitch [(ngModel)]="selectedDoctor.is_on_duty"></p-inputSwitch>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button label="Annuler" icon="pi pi-times" text (click)="editDialogVisible = false"></p-button>
+      <p-button label="Enregistrer" icon="pi pi-check" class="p-button-warning" (click)="updateDoctor()"></p-button>
+    </ng-template>
+  </p-dialog>
+</div>
