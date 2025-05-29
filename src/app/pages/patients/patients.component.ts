@@ -79,16 +79,15 @@ export class PatientsComponent implements OnInit {
     private patientService: PatientSupabaseService,
     private predictionService: PredictionService
   ) {}
-  now: Date = new Date();
 
+  now: Date = new Date();
 
   ngOnInit(): void {
     this.loadPatients();
     setInterval(() => {
-      this.now = new Date(); // Met à jour l'heure actuelle chaque minute
+      this.now = new Date();
     }, 60000);
   }
-  
 
   async loadPatients(): Promise<void> {
     try {
@@ -108,7 +107,7 @@ export class PatientsComponent implements OnInit {
       this.loading = false;
     }
   }
-  
+
   openNewPatientDialog() {
     this.newPatient = {};
     this.submitted = false;
@@ -120,8 +119,8 @@ export class PatientsComponent implements OnInit {
     const now = new Date();
     const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
 
-
     const p = this.newPatient;
+
     if (
       p.nom &&
       p.date_naissance &&
@@ -172,6 +171,8 @@ export class PatientsComponent implements OnInit {
       } catch (err) {
         console.error('Erreur ajout patient :', err);
       }
+    } else {
+      console.warn('Champs requis manquants ou invalides');
     }
   }
 
@@ -224,35 +225,26 @@ export class PatientsComponent implements OnInit {
   calculateWaitingTime(dateEntree: Date, dateFin?: Date): string {
     const entree = new Date(dateEntree);
     const end = dateFin ? new Date(dateFin) : this.now;
-  
     const diffMs = end.getTime() - entree.getTime();
-  
-    if (diffMs < 0) return '0 min'; // sécurité si entrée > now
-  
+    if (diffMs < 0) return '0 min';
     const minutes = Math.floor(diffMs / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
-  
     if (days > 0) return `${days}j ${hours % 24}h`;
     else if (hours > 0) return `${hours}h ${minutes % 60}m`;
     else return `${minutes} min`;
   }
-  
 
   async changerEtat(patient: Patient, nouvelEtat: 'waiting' | 'in-progress' | 'left') {
     patient.etat = nouvelEtat;
-  
     const now = new Date();
     const localNow = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-  
     if (nouvelEtat === 'in-progress') {
       patient.date_prise_en_charge = localNow;
     }
-  
     if (nouvelEtat === 'left') {
       patient.date_sortie = localNow;
     }
-  
     try {
       await this.patientService.updatePatient(patient);
       this.loadPatients();
@@ -260,7 +252,6 @@ export class PatientsComponent implements OnInit {
       console.error('Erreur maj état patient :', err);
     }
   }
-  
 
   getEtatLabel(etat: string): string {
     switch (etat) {
@@ -297,10 +288,7 @@ export class PatientsComponent implements OnInit {
   }
 
   getWaitingTime(patient: Patient): string {
-    if (patient.etat === 'waiting') {
-      return '0 min';
-    }
-
+    if (patient.etat === 'waiting') return '0 min';
     const start = new Date(patient.date_entree);
     const end =
       patient.etat === 'in-progress' && patient.date_prise_en_charge
@@ -308,7 +296,6 @@ export class PatientsComponent implements OnInit {
         : patient.etat === 'left' && patient.date_sortie
         ? new Date(patient.date_sortie)
         : new Date();
-
     return this.calculateWaitingTime(start, end);
   }
 }
