@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
     standalone: true,
     selector: 'app-footer',
     template: `<div class="layout-footer">
-        Hospital_Name
+        Urgencia
     </div>`
 })
 export class AppFooter {}

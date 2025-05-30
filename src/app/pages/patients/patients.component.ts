@@ -129,8 +129,8 @@ export class PatientsComponent implements OnInit {
       p.nurse_to_patient_ratio !== undefined &&
       p.specialist_availability !== undefined &&
       p.time_to_registration_min !== undefined &&
-      p.time_to_medical_professional_min !== undefined &&
-      p.available_beds_percent !== undefined
+      p.time_to_medical_professional_min !== undefined 
+    
     ) {
       const features = [
         parseFloat(p.emergency_level),
@@ -138,7 +138,9 @@ export class PatientsComponent implements OnInit {
         p.specialist_availability,
         p.time_to_registration_min,
         p.time_to_medical_professional_min,
-        p.available_beds_percent
+        p.available_beds_percent ?? 13
+
+       
       ];
 
       try {
@@ -156,7 +158,7 @@ export class PatientsComponent implements OnInit {
             specialist_availability: p.specialist_availability,
             time_to_registration_min: p.time_to_registration_min,
             time_to_medical_professional_min: p.time_to_medical_professional_min,
-            available_beds_percent: p.available_beds_percent,
+           
             predicted_wait_time: predicted,
             date_entree: localDate,
             etat: 'waiting'

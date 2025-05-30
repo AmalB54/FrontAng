@@ -19,7 +19,8 @@ import { LayoutService } from '../service/layout.service';
                                 <!--<img src="assets/logo-hopital.png" alt="Logo Hôpital" width="60" height="60" />-->
 
 
-                <span>Hospital_Name</span>
+              <span class="text-xl font-bold text-gray-800 dark:text-white">Urgencia</span>
+
             </a>
         </div>
 

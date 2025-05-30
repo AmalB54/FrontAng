@@ -35,7 +35,7 @@ export class PatientSupabaseService {
     if (error) throw error;
   }
 
-  // ✅ Fonction dynamique pour le pie chart
+  // ✅ Données pour pie chart : urgence
   async getUrgencyLevelCounts(): Promise<{ level: number; count: number }[]> {
     const { data, error } = await supabase
       .from('patients')
@@ -51,7 +51,31 @@ export class PatientSupabaseService {
       count: data.filter((p: any) => Number(p.emergency_level) === level).length
     }));
 
-    console.log('📊 Urgency level counts:', levelCounts); // 👈 pour debug
+    console.log('📊 Urgency level counts:', levelCounts);
     return levelCounts;
+  }
+
+  // ✅ Données pour le bar chart : nombre de patients par heure d'entrée
+  async getPatientsByHour(): Promise<{ hour: number; count: number }[]> {
+    const { data, error } = await supabase.from('patients').select('date_entree');
+
+    if (error || !data) {
+      console.error('❌ Erreur chargement des patients par heure :', error);
+      return [];
+    }
+
+    const hourMap = new Map<number, number>();
+
+    data.forEach((item: any) => {
+      const hour = new Date(item.date_entree).getHours();
+      hourMap.set(hour, (hourMap.get(hour) || 0) + 1);
+    });
+
+    const result = Array.from(hourMap.entries())
+      .map(([hour, count]) => ({ hour, count }))
+      .sort((a, b) => a.hour - b.hour);
+
+    console.log('📊 Patients par heure :', result);
+    return result;
   }
 }
