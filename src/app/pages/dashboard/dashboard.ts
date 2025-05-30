@@ -1,11 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { StatsWidget } from './components/statswidget';
-import { BestSellingWidget } from './components/bestsellingwidget';
-import { NotificationsWidget } from './components/notificationswidget';
 import { UrgencyChartComponent } from '../../urgency-chart/urgency-chart.component';
 import { EmergencyFlowChartComponent } from './components/emergency-flow-chart/emergency-flow-chart.component';
+import { PredictionComparisonWidget } from './components/prediction-comparison-widget';
+import { SurchargeEvolutionWidget } from './components/surcharge-evolution-widget';
+import { DashboardSupabaseService } from './dashboard-supabase.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -13,27 +14,61 @@ import { EmergencyFlowChartComponent } from './components/emergency-flow-chart/e
   imports: [
     CommonModule,
     StatsWidget,
-    BestSellingWidget,
-    NotificationsWidget,
     UrgencyChartComponent,
-    EmergencyFlowChartComponent // 👈 importé ici
+    EmergencyFlowChartComponent,
+    PredictionComparisonWidget,
+    SurchargeEvolutionWidget
   ],
   template: `
     <div class="grid grid-cols-12 gap-4">
-      <!-- Statistiques principales -->
-      <app-stats-widget class="col-span-12" />
+      <app-stats-widget
+        class="col-span-12"
+        [availableBeds]="availableBeds"
+        [availableAmbulances]="availableAmbulances"
+        [totalPatients]="totalPatients"
+        [admittedPatients]="admittedPatients"
+      />
 
-      <!-- Contenu en deux colonnes -->
       <div class="col-span-12 xl:col-span-6">
-        <app-urgency-chart /> <!-- ✅ Pie chart : reste ici -->
-        <app-best-selling-widget />
+        <app-urgency-chart />
       </div>
 
       <div class="col-span-12 xl:col-span-6">
-        <app-emergency-flow-chart /> <!-- ✅ Bar chart : à la place de Revenue Stream -->
-        <app-notifications-widget />
+        <app-emergency-flow-chart />
+      </div>
+
+      <div class="col-span-12 xl:col-span-6">
+        <app-prediction-comparison-widget />
+      </div>
+
+      <div class="col-span-12 xl:col-span-6">
+        <app-surcharge-evolution-widget />
       </div>
     </div>
   `
 })
-export class Dashboard {}
+export class Dashboard implements OnInit {
+  availableBeds = 0;
+  availableAmbulances = 0;
+  totalPatients = 0;
+  admittedPatients = 0;
+
+  constructor(private dashboardService: DashboardSupabaseService) {}
+
+  async ngOnInit() {
+    await this.loadStats();
+  }
+
+  async loadStats() {
+    try {
+      this.availableBeds = await this.dashboardService.getAvailableBeds();
+      this.availableAmbulances = await this.dashboardService.getAvailableAmbulances();
+      this.totalPatients = await this.dashboardService.getTotalPatients();
+      this.admittedPatients = await this.dashboardService.getAdmittedPatients();
+
+      console.log('Beds:', this.availableBeds); // pour débug
+    } catch (error) {
+      console.error("Erreur chargement statistiques:", error);
+    }
+  }
+}

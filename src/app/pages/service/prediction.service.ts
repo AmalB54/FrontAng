@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class PredictionService {
-  private apiUrl = 'http://127.0.0.1:8001/predict';
+  private apiUrl = 'http://127.0.0.1:8000/predict';
 
   constructor(private http: HttpClient) {}
 
