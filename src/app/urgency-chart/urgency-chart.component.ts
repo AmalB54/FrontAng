@@ -28,7 +28,7 @@ export class UrgencyChartComponent implements OnInit {
     datasets: [
       {
         data: [0, 0, 0, 0, 0],
-        backgroundColor: ['#ECEFF1', '#BBDEFB', '#C8E6C9', '#FFE0B2', '#FFCDD2'],
+        backgroundColor: ['#CFD8DC', '#BBDEFB', '#C8E6C9', '#FFE0B2', '#FFCDD2'],
         borderWidth: 1
       }
     ]
@@ -51,13 +51,10 @@ export class UrgencyChartComponent implements OnInit {
         }
       });
 
-      // Injecte les données dans le graphique
       this.pieChartData.datasets[0].data = values;
-
-      // 🔁 Important pour forcer le rafraîchissement du graphique
       this.pieChartData = { ...this.pieChartData };
 
-      console.log('📊 Données injectées :', values); // pour debug
+      console.log('📊 Données injectées :', values);
     } catch (error) {
       console.error('❌ Erreur chargement graphique urgences :', error);
     }

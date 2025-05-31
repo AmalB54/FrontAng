@@ -35,7 +35,7 @@ export class PatientSupabaseService {
     if (error) throw error;
   }
 
-  // ✅ Données pour pie chart : urgence
+  // ✅ Fonction dynamique pour le pie chart
   async getUrgencyLevelCounts(): Promise<{ level: number; count: number }[]> {
     const { data, error } = await supabase
       .from('patients')

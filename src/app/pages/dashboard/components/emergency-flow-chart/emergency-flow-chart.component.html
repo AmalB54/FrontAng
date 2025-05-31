@@ -1,9 +1,12 @@
-<div class="card">
-  <h5>Emergency Department Flow</h5>
-  <canvas
-    baseChart
-    [data]="barChartData"
-    [type]="barChartType"
-    [options]="barChartOptions">
-  </canvas>
+<div class="card flex flex-col items-center justify-center text-center p-4">
+  <h2 class="text-2xl font-bold mb-4 tracking-wide text-gray-800 dark:text-white">
+    Emergency Department Flow
+  </h2>
+  <div class="w-full h-[300px]">
+    <canvas baseChart
+            [data]="barChartData"
+            [options]="barChartOptions"
+            [type]="'bar'">
+    </canvas>
+  </div>
 </div>

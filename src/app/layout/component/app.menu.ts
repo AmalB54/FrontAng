@@ -20,21 +20,22 @@ export class AppMenu {
 
     ngOnInit() {
         this.model = [
-            {
-                label: 'Home',
-                items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/'] }]
-            },
-            {
-                label: 'Hospital Management',
-                items: [
-                    { label: 'Patients', icon: 'pi pi-fw pi-users', routerLink: ['/patients'] },
-                    { label: 'Nurses', icon: 'pi pi-fw pi-users', routerLink: ['/nurses'] },
-                    { label: 'Doctors', icon: 'pi pi-fw pi-user-plus', routerLink: ['/doctors'] },
-                    { label: 'Rooms', icon: 'pi pi-fw pi-building', routerLink: ['/rooms'] },
-                  
-                ]
-            }
-            
-        ];
+  {
+    label: 'Home',
+    items: [
+      { label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/'] }
+    ]
+  },
+  {
+    label: 'Hospital Management',
+    items: [
+      { label: 'Patients', icon: 'pi pi-fw pi-users', routerLink: ['/patients'] },
+      { label: 'Nurses', icon: 'pi pi-fw pi-user-edit', routerLink: ['/nurses'] },
+      { label: 'Doctors', icon: 'pi pi-fw pi-user-md', routerLink: ['/doctors'] },
+      { label: 'Rooms', icon: 'pi pi-fw pi-building', routerLink: ['/rooms'] }
+    ]
+  }
+];
+
     }
 }

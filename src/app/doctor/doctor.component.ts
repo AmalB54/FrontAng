@@ -12,6 +12,7 @@ import { Table } from 'primeng/table';
 import { DoctorSupabaseService } from '../supabase/services/doctor-supabase.service';
 import { TagModule } from 'primeng/tag'; // <-- ajouter cette ligne
 import { InputSwitchModule } from 'primeng/inputswitch';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-doctor',
@@ -20,6 +21,7 @@ import { InputSwitchModule } from 'primeng/inputswitch';
   styleUrls: ['./doctor.component.scss'],
   imports: [
     CommonModule,
+    RouterModule,
     FormsModule,
     TableModule,
     InputTextModule,
